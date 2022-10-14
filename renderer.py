@@ -80,24 +80,28 @@ def make_note(problem):
         codes.append(output)
     submissions = "\n".join(codes)
 
-    note = Note(
-        model=get_anki_model(),
-        fields=[
-            str(problem.display_id),
-            problem.title,
-            problem.slug,
-            problem.level,
-            problem.description,
-            tags,
-            tags_slug,
-            markdown_to_html(solution.content) if solution else "",
-            submissions
-        ],
-        guid=str(problem.display_id),
-        sort_field=str(problem.display_id),
-        tags=[t.slug for t in problem.tags]
-    )
-    return note
+    try:
+        note = Note(
+            model=get_anki_model(),
+            fields=[
+                str(problem.display_id),
+                problem.title,
+                problem.slug,
+                problem.level,
+                problem.description,
+                tags,
+                tags_slug,
+                markdown_to_html(solution.content) if solution else "",
+                submissions
+            ],
+            guid=str(problem.display_id),
+            sort_field=str(problem.display_id),
+            tags=[t.slug for t in problem.tags]
+        )
+        return node
+    except Exception:
+        print("make note failed")
+        raise
 
 
 def render_anki():
@@ -111,8 +115,11 @@ def render_anki():
     )
 
     for problem in problems:
-        note = make_note(problem)
-        anki_deck.add_note(note)
+        try: 
+            note = make_note(problem)
+            anki_deck.add_note(note)
+        except Exception:
+            print(f"generate problem \"{problem.title}\" failed :)")
 
     path = conf.get("Anki", "output")
     Package(anki_deck).write_to_file(path)
